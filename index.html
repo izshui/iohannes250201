@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" />
+  <link rel="stylesheet" href="css/reset.css" type="text/css" />
+  <link rel="stylesheet" href="css/zoom.css" type="text/css" />
+  <link rel="stylesheet" href="css/index.css" type="text/css" />
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>导出记录</title>
+</head>
+<body>
+  <div class="aside" style="left: 0;"></div>
+  <div class="aside" style="right: 0;">
+    <div class="timeline-container current-timeline relative" id="messageTimeline"></div>
+    <div class="timeline-container relative" id="imageTimeline"></div>
+    <div class="timeline-container relative" id="videoTimeline"></div>
+  </div>
+  <div class="main relative">
+
+    <div class="title">
+      <span id="name"></span>
+      <div class="action-bar right">
+        <a href="javascript:;" id="message" class="inline-block tab-item selected-item"></a>
+        <!-- <a href="javascript:;" id="image" class="inline-block tab-item"></a>
+        <a href="javascript:;" id="video" class="inline-block tab-item"></a> -->
+      </div>
+    </div>
+
+    <div class="message-container current-tab clearfix">
+    </div>
+    <div class="video-container clearfix">
+    </div>
+    <div class="image-container clearfix">
+    </div>
+  </div>
+  <script type="text/template" id="myTemplate">
+  [: var prevImage = ''; for(var i = 0, l = data.length; i < l; i++) { var item = data[i];:]
+    <!-- /*斗图消息*/ -->
+    [: if(item.m_uiMessageType === 47) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <img class="message-img" style="cursor: default;" onerror="javascript:this.src='img/wechat/pic_delete.png'" src="[:=item.m_nsContent.msg && item.m_nsContent.msg.emoji && item.m_nsContent.msg.emoji.cdnurl:]" alt="" />
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <img class="message-img" style="cursor: default;" onerror="javascript:this.src='img/wechat/pic_delete.png'" src="[:=item.m_nsContent.msg && item.m_nsContent.msg.emoji && item.m_nsContent.msg.emoji.cdnurl:]" alt="" />
+        </div>
+      </div>
+      [: } :]
+    [: } 
+    <!-- /*图片消息*/ -->
+    else if(item.m_uiMessageType === 3) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from && item.from.head:]" alt="头像" />
+        <div class="right">
+          <img class="message-img" data-index="[:=item.imageIndex:]" data-action="zoom" onerror="javascript:this.src='img/wechat/pic_delete.png'" data-src="[:=item.m_nsContent:]" alt="" />
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from && item.from.head:]" alt="头像" />
+        <div class="left">
+          <img class="message-img" data-index="[:=item.imageIndex:]" data-action="zoom" onerror="javascript:this.src='img/wechat/pic_delete.png'" src="[:=item.m_nsContent:]" alt="" />
+        </div>
+      </div>
+      [: } prevImage = item.m_nsContent; :]
+    [: }
+    <!-- /*文字消息*/ -->
+    else if(item.m_uiMessageType === 1) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <span class="arrow-right right"></span>
+          <div class="inline-block message-content">[:=item.m_nsContent:]</div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <span class="arrow-left left"></span>
+          <div class="inline-block message-content-left">[:=item.m_nsContent:]</div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*文件消息*/ -->
+    else if(item.m_uiMessageType === 49 && item.m_nsContent && item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.type == 6) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <div class="file-message inline-block clearfix">
+            <span class="file-img inline-block left file-[:=item.m_nsContent.msg.appmsg.appattach.filetext:]"></span>
+            <div class="file-name left">
+              <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+              <p class="file-size">[:=item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.appattach && item.m_nsContent.msg.appmsg.appattach.totallen && (item.m_nsContent.msg.appmsg.appattach.totallen/1024/1024).toFixed(1):]M</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <div class="file-message inline-block clearfix">
+            <span class="file-img inline-block left file-[:=item.m_nsContent.msg.appmsg.appattach.filetext:]"></span>
+            <div class="file-name left">
+              <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+              <p class="file-size">[:=item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.appattach && item.m_nsContent.msg.appmsg.appattach.totallen && (item.m_nsContent.msg.appmsg.appattach.totallen/1024/1024).toFixed(1):]M</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*分享消息*/ -->
+    else if(item.m_uiMessageType === 49 && item.m_nsContent && item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.type == 3) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <a class="message-link inline-block" href="[:=item.m_nsContent.msg.appmsg.url:]" target="_blank">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+            <div class="message-link-description">
+              <span class="message-link-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.des:]
+            </div>
+            <div class="user-card-bottom">[:=item.m_nsContent.msg && item.m_nsContent.msg.appinfo && item.m_nsContent.msg.appinfo.appname:]</div>
+          </a>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <a class="message-link inline-block" href="[:=item.m_nsContent.msg.appmsg.url:]" target="_blank">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+            <div class="message-link-description">
+              <span class="message-link-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.des:]
+            </div>
+            <div class="user-card-bottom">[:=item.m_nsContent.msg && item.m_nsContent.msg.appinfo && item.m_nsContent.msg.appinfo.appname:]</div>
+          </a>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*分享消息*/ -->
+    else if(item.m_uiMessageType === 49 && item.m_nsContent && item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.type == 5) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <a class="message-link inline-block" href="[:=item.m_nsContent.msg.appmsg.url:]" target="_blank">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+            <div class="message-link-description">
+              <span class="message-link-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.des:]
+            </div>
+            <div class="user-card-bottom">[:=item.m_nsContent.msg && item.m_nsContent.msg.appinfo && item.m_nsContent.msg.appinfo.appname:]</div>
+          </a>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <a class="message-link inline-block" href="[:=item.m_nsContent.msg.appmsg.url:]" target="_blank">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+            <div class="message-link-description">
+              <span class="message-link-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.des:]
+            </div>
+            <div class="user-card-bottom">[:=item.m_nsContent.msg && item.m_nsContent.msg.appinfo && item.m_nsContent.msg.appinfo.appname:]</div>
+          </a>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*位置共享消息*/ -->
+    else if(item.m_uiMessageType === 49 && item.m_nsContent && item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.type == 17) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <span class="arrow-right right"></span>
+          <div class="inline-block message-content share-location">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title && item.m_nsContent.msg.appmsg.title["#cdata-section"]:]</div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <span class="arrow-left left"></span>
+          <div class="inline-block message-content-left share-location">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title && item.m_nsContent.msg.appmsg.title["#cdata-section"]:]</div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*小程序*/ -->
+    else if(item.m_uiMessageType === 49 && item.m_nsContent && item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.type == 33) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <div class="message-link inline-block" target="_blank">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+            <div class="message-link-description">
+              <span class="message-sp-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.des:]<br/>
+              收到一个小程序，请在手机上查看
+            </div>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <div class="message-link inline-block" target="_blank">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title:]</h4>
+            <div class="message-link-description">
+              <span class="message-sp-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.des:]<br/>
+              收到一个小程序，请在手机上查看
+            </div>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*转账消息*/ -->
+    else if(item.m_uiMessageType === 49 && item.m_nsContent && item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.type == 2000) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <div class="red-bag">
+            <div class="transfer-title">
+              <span class="transfer-img left"></span>
+              <div class="red-bag-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.wcpayinfo && item.m_nsContent.msg.appmsg.wcpayinfo.feedesc && item.m_nsContent.msg.appmsg.wcpayinfo.feedesc["#cdata-section"]:]<br>
+                  <span class="red-bag-tip">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title && item.m_nsContent.msg.appmsg.title["#cdata-section"] || '微信转账':]</span>
+                </h4>
+              </div>
+            </div>
+            <div class="red-bag-bottom">微信转账</div>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <div class="red-bag">
+            <div class="transfer-title">
+              <span class="transfer-img left"></span>
+              <div class="red-bag-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.wcpayinfo && item.m_nsContent.msg.appmsg.wcpayinfo.feedesc && item.m_nsContent.msg.appmsg.wcpayinfo.feedesc["#cdata-section"]:]<br>
+                  <span class="red-bag-tip">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.title && item.m_nsContent.msg.appmsg.title["#cdata-section"] || '微信转账':]</span>
+                </h4>
+              </div>
+            </div>
+            <div class="red-bag-bottom">微信转账</div>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*红包消息*/ -->
+    else if(item.m_uiMessageType === 49 && item.m_nsContent && item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.type == 2001) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <div class="red-bag">
+            <div class="red-bag-title">
+              <span class="red-bag-img left"></span>
+              <div class="red-bag-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.wcpayinfo && item.m_nsContent.msg.appmsg.wcpayinfo.sendertitle  && item.m_nsContent.msg.appmsg.wcpayinfo.sendertitle["#cdata-section"]:]<br>
+                  <span class="red-bag-tip">领取红包</span>
+                </h4>
+              </div>
+            </div>
+            <div class="red-bag-bottom">微信红包</div>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <div class="red-bag">
+            <div class="red-bag-title">
+              <span class="red-bag-img left"></span>
+              <div class="red-bag-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.appmsg && item.m_nsContent.msg.appmsg.wcpayinfo && item.m_nsContent.msg.appmsg.wcpayinfo.sendertitle && item.m_nsContent.msg.appmsg.wcpayinfo.sendertitle["#cdata-section"]:]<br>
+                  <span class="red-bag-tip">领取红包</span>
+                </h4>
+              </div>
+            </div>
+            <div class="red-bag-bottom">微信红包</div>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*撤回消息*/ -->
+    else if(item.m_uiMessageType === 38) { :] 
+    <div class="message-tip-container text-center"><div class="message-tip">[:=item.m_nsContent:]</div></div>
+    [: }
+    <!-- /*视频消息*/ -->
+    else if(item.m_uiMessageType === 62 || item.m_uiMessageType === 43) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <video width="100%" class="message-video" controls><source src="[:=item.m_nsContent:]" type="video/mp4"></video>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <video width="100%" class="message-video" controls><source src="[:=item.m_nsContent:]" type="video/mp4"></video>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*语音消息*/ -->
+    else if(item.m_uiMessageType === 34) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right relative">
+          <span class="arrow-right right"></span>
+          <div class="inline-block message-content">
+            <audio src="[:=item.m_nsContent:]"></audio>
+            <span class="inline-block voice-img voice-right-img" style="width:[:=5*item.m_uiVoiceTime:]px;"></span>
+            <span class="voice-duration voice-duration-right">[:=item.m_uiVoiceTime:]''</span>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left relative">
+          <span class="arrow-left left"></span>
+          <div class="inline-block message-content-left">
+            <audio src="[:=item.m_nsContent:]"></audio>
+            <span class="inline-block voice-img voice-left-img" style="width:[:=5*item.m_uiVoiceTime:]px;"></span>
+            <span class="voice-duration voice-duration-left">[:=item.m_uiVoiceTime:]''</span>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!--视频聊天消息-->
+    else if(item.m_uiMessageType === 50) { :]
+      <!--我是发送者-->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <span class="arrow-right right"></span>
+          <div class="inline-block message-content share-location">[:=item.m_nsContent.msg && item.m_nsContent.msg.voipinvitemsg? '发起视频邀请' : (item.m_nsContent.msg && item.m_nsContent.msg.voiplocalinfo.duration == 0? '视频已取消' : '视频消息'):]</div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <span class="arrow-left left"></span>
+          <div class="inline-block message-content-left share-location">[:=item.m_nsContent.msg && item.m_nsContent.msg.voipinvitemsg? '发起视频邀请' : (item.m_nsContent.msg && item.m_nsContent.msg.voiplocalinfo.duration == 0? '视频已取消' : '视频消息'):]</div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*名片消息*/ -->
+    else if(item.m_uiMessageType === 42) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <div class="user-card">
+            <div class="user-card-title">
+              <img class="user-card-img left" src="img/wechat/person.jpg" />
+              <div class="user-card-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.nickname:]<br>
+                  <span class="user-card-tip text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.alias:]</span>
+                </h4>
+              </div>
+            </div>
+            <div class="user-card-bottom">个人名片</div>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <div class="user-card">
+            <div class="user-card-title">
+              <img class="user-card-img left" src="img/wechat/person.jpg" />
+              <div class="user-card-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.nickname:]<br>
+                  <span class="user-card-tip text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.alias:]</span>
+                </h4>
+              </div>
+            </div>
+            <div class="user-card-bottom">个人名片</div>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*系统消息*/ -->
+    else if(item.m_uiMessageType === 10000) { :]
+      [: if(typeof item.m_nsContent === 'string' && item.m_nsContent.indexOf('SystemMessages_HongbaoIcon.png') > 0) { :] 
+      <div class="message-tip-container text-center" id="m_[:=item.m_uiMesLocalID:]"><div class="message-tip"><span class="red-bag-icon inline-block"></span>[:=item.m_nsContent.substring(item.m_nsContent.indexOf('>') + 1, item.m_nsContent.indexOf('<_wc_custom_link_')):]<span class="red-bag-color">红包</span></div></div>
+      [: } else if(typeof item.m_nsContent === 'string') { :]
+      <div class="message-tip-container text-center" id="m_[:=item.m_uiMesLocalID:]"><div class="message-tip text-center">[:=item.m_nsContent:]</div></div>
+      [: } else { :]
+	  
+	  [: } :]
+    [: }
+    <!-- /*时间消息*/ -->
+    else if(item.m_uiMessageType === 'time') { :]
+      <div class="message-time text-center">[:=item.m_nsContent:]</div>
+    [: }
+    <!-- /*名片消息*/ -->
+    else if(item.m_uiMessageType === 42) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <div class="user-card">
+            <div class="user-card-title">
+              <img class="user-card-img left" src="img/wechat/person.jpg" />
+              <div class="user-card-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.nickname:]<br>
+                  <span class="user-card-tip text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.alias:]</span>
+                </h4>
+              </div>
+            </div>
+            <div class="user-card-bottom">个人名片</div>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <div class="user-card">
+            <div class="user-card-title">
+              <img class="user-card-img left" src="img/wechat/person.jpg" />
+              <div class="user-card-text">
+                <h4 class="text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.nickname:]<br>
+                  <span class="user-card-tip text-nowrap">[:=item.m_nsContent.msg && item.m_nsContent.msg.alias:]</span>
+                </h4>
+              </div>
+            </div>
+            <div class="user-card-bottom">个人名片</div>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: }
+    <!-- /*位置消息*/ -->
+    else if(item.m_uiMessageType === 48) { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <div class="message-location inline-block">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.location && item.m_nsContent.msg.location.label:]</h4>
+            <div class="message-link-description">
+              <span class="message-location-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.location && item.m_nsContent.msg.location.x:] [:=item.m_nsContent.msg && item.m_nsContent.msg.location && item.m_nsContent.msg.location.y:]
+            </div>
+          </div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <div class="message-location inline-block">
+            <h4>[:=item.m_nsContent.msg && item.m_nsContent.msg.location && item.m_nsContent.msg.location.label:]</h4>
+            <div class="message-link-description">
+              <span class="message-location-icon right"></span>
+              [:=item.m_nsContent.msg && item.m_nsContent.msg.location && item.m_nsContent.msg.location.x:] [:=item.m_nsContent.msg && item.m_nsContent.msg.location && item.m_nsContent.msg.location.y:]
+            </div>
+          </div>
+        </div>
+      </div>
+      [: } :]
+    [: } else { :]
+      <!-- /*我是发送者*/ -->
+      [: if(item.m_nsFromUsr === from) { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar right" src="[:=item.from.head:]" alt="头像" />
+        <div class="right">
+          <span class="arrow-right right"></span>
+          <div class="inline-block message-content">当前版本暂不支持查看此消息,请在手机上查看</div>
+        </div>
+      </div>
+      [: } else { :]
+      <div class="message-text-container clearfix" id="m_[:=item.m_uiMesLocalID:]">
+        <img class="message-avatar left" src="[:=item.from.head:]" alt="头像" />
+        <div class="left">
+          <span class="arrow-left left"></span>
+          <div class="inline-block message-content-left">当前版本暂不支持查看此消息,请在手机上查看</div>
+        </div>
+      </div>
+      [: } :]
+    [: } :]
+
+  [: } :]
+  </script>
+  <script type="text/template" id="timelineTemplate">
+  [: var timelineIndex = 0; for(var year in data) { var months = data[year]; :]
+    <div class="timeline-year relative[:=timelineIndex === 0 ? ' current-timeline-year' : '':]">
+      <h4>[:=year:]</h4>
+      <ul>
+        [: for(var i in months) { var month = months[i]; :]
+        <li>
+          <a href="#" pageIndex="[:=month.itemIndex:]" class="timeline-month relative[:=timelineIndex === 0 ? ' current-timeline-month' : '':]">[:=month.text:]月</a>
+        </li>
+        [:  timelineIndex++; } :]
+      </ul>
+    </div>
+  [: } :]
+  </script>
+  <script type="text/template" id="videoTemplate">
+  [: var lastMonth = -1, lastYear = 0; for(var i = 0, l = data.length; i < l; i++) { var item = data[i], time = new Date(item.m_uiCreateTime * 1000);:]
+    [: if(item.m_uiMessageType === 62 || item.m_uiMessageType === 43) { :]
+    [: if(time.getMonth() != lastMonth || time.getFullYear() != lastYear) { lastMonth = time.getMonth(); lastYear = time.getFullYear(); :]
+    <h3 class="video-title">[:=time.getFullYear():]年[:=time.getMonth() + 1:]月</h3>
+    [: } :]
+    <div class="video-item-container left relative" id="v_[:=item.m_uiMesLocalID:]">
+      <div class="relative">
+        <div class="place-holder" style="background-image: url(img/wechat/video_delete.png);"></div>
+        <video width="100%" class="video-item" onerror="javascript:this.parentNode.removeChild(this.nextElementSibling); this.parentNode.removeChild(this);" src="[:=item.m_nsContent:]"></video>
+        <div class="play-layer"></div>
+      </div>
+    </div>
+    [: } :]
+  [: } :]
+  </script>
+  <script type="text/template" id="imageTemplate">
+  [: var prevImage = '', lastMonth = -1, lastYear = 0; for(var i = 0, l = data.length; i < l; i++) { var item = data[i], time = new Date(item.m_uiCreateTime * 1000);:]
+    [: if(item.m_uiMessageType === 3) { :]
+    [: if(time.getMonth() != lastMonth || time.getFullYear() != lastYear) { lastMonth = time.getMonth(); lastYear = time.getFullYear(); :]
+    <h3 class="video-title">[:=time.getFullYear():]年[:=time.getMonth() + 1:]月</h3>
+    [: } :]
+    <div class="image-item-container left" id="i_[:=item.m_uiMesLocalID:]">
+      <div class="relative">
+        <div class="place-holder" style="background-image: url([:=item.m_nsContent:]), url('img/wechat/pic_delete.png'); background-size: cover;"></div>
+        <img class="image-item" data-index="[:=item.imageIndex:]" data-action="zoom" onerror="javascript:this.src='img/wechat/pic_delete.png';" src="[:=item.m_nsContent:]" alt="" />
+      </div>
+    </div>
+    [: prevImage = item.m_nsContent; } :]
+  [: } :]
+  </script>
+  <script src="js/jquery.js"></script>
+  <script src="js/message.js"></script>
+  <script src="js/tppl.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/zoom.js"></script>
+  <script src="js/lazy_img.min.js"></script>
+</body>
+</html>
